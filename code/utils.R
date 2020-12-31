@@ -4,6 +4,7 @@ library(randomForest)
 library(foreign)
 library(caret)
 library(OpenImageR)
+library(keras)
 library(nnet)
 library(glm.predict)
 library(data.table)
@@ -12,7 +13,7 @@ library(DescTools)
 library(lattice)
 library(magrittr)
 
-setwd("/home/pasoneto/Documents/github/doc_suomi/data")
+setwd("/home/pasoneto/Documents/Ciência/PhD/data")
 set.seed(2020)
 #Functions
 z <- function(x){ 
@@ -154,30 +155,30 @@ model_eval = function(model_fitted, x.teste, y.teste){
 
 ##################
 
-#### data LSTM
-inter = fread("interpolated/nn_interpol.csv")
-colnames(inter) <- c("index", "valence", "energy", "loudness", "tempo", "album_id", "track_number")
+# #### data LSTM
+# inter = fread("interpolated/nn_interpol.csv")
+# colnames(inter) <- c("index", "valence", "energy", "loudness", "tempo", "album_id", "track_number")
 
-lstm_data = inter %>% group_by(album_id) %>%
-            mutate(position = segment(track_number)) %>%
-            group_by(album_id, position) %>%
-            mutate(track_number = seq(1, NROW(track_number), 1), 
-                   position = as.factor(position)) %>% ungroup() %>%
-            mutate(valence = minmax(valence), energy = minmax(energy), 
-                   loudness = minmax(loudness), tempo = minmax(tempo), 
-                   track_number = minmax(track_number)) %>% ungroup() %>% group_by(album_id) %>%
-            mutate(valence_next = shift(valence, -1), energy_next = shift(energy, -1), 
-                   loudness_next = shift(loudness, -1), tempo_next = shift(tempo, -1)) %>%
-            ungroup() %>% na.omit() %>%
-            mutate(position = as.factor(position)) %>%
-            fastDummies::dummy_cols(select_columns = "position", remove_selected_columns = TRUE)
+# lstm_data = inter %>% group_by(album_id) %>%
+#             mutate(position = segment(track_number)) %>%
+#             group_by(album_id, position) %>%
+#             mutate(track_number = seq(1, NROW(track_number), 1), 
+#                    position = as.factor(position)) %>% ungroup() %>%
+#             mutate(valence = minmax(valence), energy = minmax(energy), 
+#                    loudness = minmax(loudness), tempo = minmax(tempo), 
+#                    track_number = minmax(track_number)) %>% ungroup() %>% group_by(album_id) %>%
+#             mutate(valence_next = shift(valence, -1), energy_next = shift(energy, -1), 
+#                    loudness_next = shift(loudness, -1), tempo_next = shift(tempo, -1)) %>%
+#             ungroup() %>% na.omit() %>%
+#             mutate(position = as.factor(position)) %>%
+#             fastDummies::dummy_cols(select_columns = "position", remove_selected_columns = TRUE)
 
-#Train test split
-treino_lstm = treino_teste(lstm_data)$train
-teste_lstm = treino_teste(lstm_data)$test
+# #Train test split
+# treino_lstm = treino_teste(lstm_data)$train
+# teste_lstm = treino_teste(lstm_data)$test
 
-treino_lstm = apply(as.matrix(lstm_data), 2, as.numeric)
-teste_lstm = apply(as.matrix(lstm_data), 2, as.numeric)
+# treino_lstm = apply(as.matrix(lstm_data), 2, as.numeric)
+# teste_lstm = apply(as.matrix(lstm_data), 2, as.numeric)
 
 r2 = function(var_interest, pred_vars, model, data){
         pred = predict(model, data[, pred_vars])
