@@ -13,7 +13,6 @@ library(DescTools)
 library(lattice)
 library(magrittr)
 
-setwd("/home/pasoneto/Documents/Ciência/PhD/data")
 set.seed(2020)
 #Functions
 z <- function(x){ 
@@ -41,6 +40,30 @@ count <- function(x){
     for(i in x){ if(i == 1){count = count+1}} 
     return(count/length(x)) 
     }
+
+#################################################
+############ Dissimilarity matrices #############
+#################################################
+
+dissim_gen = function(data){
+    dt <- split(data, data$album_id)
+    for(i in 1:length(dt)) { 
+
+        dt[[i]] = tidyr::pivot_wider(dt[[i]], 
+                  names_from = album_id, 
+                  values_from = c(valence, energy, loudness, tempo)) 
+
+        dt[[i]] = dt[[i]][, 4:7] #selecting only columns related to features.
+
+        dt[[i]] <- as.matrix(dt[[i]]) 
+
+        dt[[i]] <- as.matrix(daisy(dt[[i]]))
+
+        dt[[i]][dt[[i]] == 0] <- NA
+
+    }
+    return(dt)
+}
 
 #element-wise matrix calculator
 matrix_parser <- function(matrix_list, FUN){
