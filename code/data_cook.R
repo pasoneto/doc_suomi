@@ -44,9 +44,50 @@ dissim_matrix = function(){
         return(dado)
 }
 
+upsampled_album = function(){
+        file_list <- list.files(path="/home/pasoneto/Documents/github/doc_suomi/code/data_processing/upsampled_albums")
+        matrices = c()
+
+        for(i in 1:length(file_list)){
+                file = paste("/home/pasoneto/Documents/github/doc_suomi/code/data_processing/upsampled_albums/", file_list[i], sep = "")
+                matrices[[i]] = fread(file, header = TRUE)
+        }
+        matrices[[5416]] <- NULL
+        matrices = bind_rows(matrices)
+        return(matrices)
+        }
+
+list_upampled = function(){
+        file_list <- list.files(path="/home/pasoneto/Documents/github/doc_suomi/code/data_processing/upsampled_albums")
+        matrices = c()
+
+        for(i in 1:length(file_list)){
+                file = paste("/home/pasoneto/Documents/github/doc_suomi/code/data_processing/upsampled_albums/", file_list[i], sep = "")
+                matrices[[i]] = fread(file, header = TRUE)
+        }
+        matrices[[5416]] <- NULL
+        return(matrices)
+        }
+
+list_dissim = function(){
+        file_list <- list.files(path="/home/pasoneto/Documents/github/doc_suomi/code/data_processing/dissimilarity_matrices")
+        matrices = c()
+
+        for(i in 1:length(file_list)){
+                file = paste("/home/pasoneto/Documents/github/doc_suomi/code/data_processing/dissimilarity_matrices/", file_list[i], sep = "")
+                matrices[[i]] = fread(file, header = TRUE)
+        }
+        matrices[[5416]] <- NULL
+        return(matrices)
+        }
+
+
 howto_data = paste("How to use datasets",
                    " ",
-                   "call    base()          for real values", 
-                   "call    z_scored()      for normalized", 
-                   "call    min_maxed()     for normalized2", 
-                   "call    dissim_matrix() for dissimilarities", sep = "\n")
+                   "call    base()             for real values", 
+                   "call    z_scored()         for normalized", 
+                   "call    min_maxed()        for normalized2", 
+                   "call    dissim_matrix()    for dissimilarities", 
+                   "call    upsampled_album()  for binded upsamplped albums", 
+                   "call    list_upsampled()   for list of upsampled albums",
+                   "call    list_dissim()      for list of disssimilarities" ,sep = "\n")

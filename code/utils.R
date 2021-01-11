@@ -3,15 +3,13 @@ library(dplyr)
 library(randomForest)
 library(foreign)
 library(caret)
-library(OpenImageR)
 library(keras)
-library(nnet)
-library(glm.predict)
 library(data.table)
 library(cluster)
 library(DescTools)
 library(lattice)
 library(magrittr)
+library(tensorflow)
 
 set.seed(2020)
 #Functions
@@ -45,15 +43,13 @@ count <- function(x){
 ############ Dissimilarity matrices #############
 #################################################
 
-dissim_gen = function(data){
-    dt <- split(data, data$album_id)
+dissim_gen = function(dt){
     for(i in 1:length(dt)) { 
-
         dt[[i]] = tidyr::pivot_wider(dt[[i]], 
                   names_from = album_id, 
                   values_from = c(valence, energy, loudness, tempo)) 
 
-        dt[[i]] = dt[[i]][, 4:7] #selecting only columns related to features.
+        dt[[i]] = dt[[i]][, 2:5] #selecting only columns related to features.
 
         dt[[i]] <- as.matrix(dt[[i]]) 
 
@@ -62,12 +58,18 @@ dissim_gen = function(data){
         dt[[i]][dt[[i]] == 0] <- NA
 
     }
+    return(matrix(dt))
+}
+
+album_splitter = function(data){
+    dt %<>% dplyr::select(track_number, valence, energy, loudness, tempo) %>%
+        split(data$album_id) 
     return(dt)
 }
 
 #element-wise matrix calculator
 matrix_parser <- function(matrix_list, FUN){
-    return(apply(simplify2array(matrix_list), 1:2, function(x){FUN(x, na.rm = TRUE)}))
+    return(apply(simplify2array(matrix_list), 1:2, function(x){FUN(x)}))
 }
 
 # dt = fread("novo.csv")
@@ -137,44 +139,44 @@ zrule = function(data, var_interest, var_pred){
 ##################
 
 #LSTM setup
-model = keras_model_sequential() %>% 
-    layer_lstm(
-        units = 124,
-        batch_input_shape = c(1, 1, 8),
-        dropout = 0.2,
-        recurrent_dropout = 0.5,
-        return_sequences = TRUE,
-        stateful = TRUE
-  ) %>%
+# model = keras_model_sequential() %>% 
+#     layer_lstm(
+#         units = 124,
+#         batch_input_shape = c(1, 1, 8),
+#         dropout = 0.2,
+#         recurrent_dropout = 0.5,
+#         return_sequences = TRUE,
+#         stateful = TRUE
+#   ) %>%
 
-   layer_dense(units=16, activation="linear") %>%
-   layer_lstm(units = 8,return_sequences = TRUE, stateful = FALSE) %>%
-   layer_dense(units=1, activation="linear")
+#    layer_dense(units=16, activation="linear") %>%
+#    layer_lstm(units = 8,return_sequences = TRUE, stateful = FALSE) %>%
+#    layer_dense(units=1, activation="linear")
  
-model %>% compile(
-   loss = "mse",
-   optimizer =  "adam", 
-   metrics = list("mean_absolute_error")
- )
+# model %>% compile(
+#    loss = "mse",
+#    optimizer =  "adam", 
+#    metrics = list("mean_absolute_error")
+#  )
 
-# Function receives data and returns fitted model
-lstm = function(var_interest, var_pred, model, treino, teste){
-        nfeatures = ncol(treino[, pred_vars])
-        y.treino = array(treino[, var_interest], dim = c(nrow(treino), 1, 1))
-        x.treino = array(treino[, var_pred], dim = c(nrow(treino), 1, 8))
-        y.teste =  array(teste[, var_interest], dim = c(1, 1, nrow(teste)))
-        x.teste =  array(teste[, var_pred], dim = c(1, nfeatures, nrow(teste)))
+# # Function receives data and returns fitted model
+# lstm = function(var_interest, var_pred, model, treino, teste){
+#         nfeatures = ncol(treino[, pred_vars])
+#         y.treino = array(treino[, var_interest], dim = c(nrow(treino), 1, 1))
+#         x.treino = array(treino[, var_pred], dim = c(nrow(treino), 1, 8))
+#         y.teste =  array(teste[, var_interest], dim = c(1, 1, nrow(teste)))
+#         x.teste =  array(teste[, var_pred], dim = c(1, nfeatures, nrow(teste)))
     
-    model %>% fit(x.treino, 
-                  y.treino, 
-                  epochs = 100,verbose = 0)
-    return(model)
-}
+#     model %>% fit(x.treino, 
+#                   y.treino, 
+#                   epochs = 100,verbose = 0)
+#     return(model)
+# }
 
-model_eval = function(model_fitted, x.teste, y.teste){
-    pre = predict(model_fitted, x.teste)
-    return(Metrics::rmse(pre, y.teste))    
-}
+# model_eval = function(model_fitted, x.teste, y.teste){
+#     pre = predict(model_fitted, x.teste)
+#     return(Metrics::rmse(pre, y.teste))    
+# }
 
 ##################
 
