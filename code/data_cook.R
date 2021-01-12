@@ -4,14 +4,14 @@ raw = fread("data.csv") %>% dplyr::select(!V1)
 raw %<>% group_by(album_id, track_number) %>%
         summarise(valence = mean(valence), energy = mean(energy), 
                   loudness = mean(loudness), tempo = mean(tempo)) %>%
-        mutate(album_length = NROW(track_number)) %>% ungroup()
+        mutate(album_length = NROW(track_number)) %>% ungroup() %>%
+        filter(album_length %in% c(6:16))
 
 ############### Base for work
 base = function(){
         raw %<>% group_by(album_id) %>% 
                 mutate(album_length = NROW(track_number), 
                        section = segment(track_number)) %>%
-                filter(album_length %in% c(6:16)) %>%
                 dplyr::select(album_id, album_length, track_number, valence, energy, loudness, tempo)
         return(raw)
 }
@@ -57,7 +57,7 @@ upsampled_album = function(){
         return(matrices)
         }
 
-list_upampled = function(){
+list_upsampled = function(){
         file_list <- list.files(path="/home/pasoneto/Documents/github/doc_suomi/code/data_processing/upsampled_albums")
         matrices = c()
 
@@ -82,12 +82,12 @@ list_dissim = function(){
         }
 
 
-howto_data = paste("How to use datasets",
-                   " ",
-                   "call    base()             for real values", 
-                   "call    z_scored()         for normalized", 
-                   "call    min_maxed()        for normalized2", 
-                   "call    dissim_matrix()    for dissimilarities", 
-                   "call    upsampled_album()  for binded upsamplped albums", 
-                   "call    list_upsampled()   for list of upsampled albums",
-                   "call    list_dissim()      for list of disssimilarities" ,sep = "\n")
+paste("How to use datasets",
+        " ",
+        "call    base()             for real values", 
+        "call    z_scored()         for normalized", 
+        "call    min_maxed()        for normalized2", 
+        "call    dissim_matrix()    for dissimilarities", 
+        "call    upsampled_album()  for binded upsamplped albums", 
+        "call    list_upsampled()   for list of upsampled albums",
+        "call    list_dissim()      for list of disssimilarities" ,sep = "\n")
