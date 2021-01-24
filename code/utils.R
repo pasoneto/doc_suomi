@@ -33,6 +33,8 @@ segment2 <- function(x) {
     return(sections)
     }
 
+minmax <- function(x, min, max) { return(scales::rescale(x, to=c(min,max))) }
+
 count <- function(x){ 
     count = 0 
     for(i in x){ if(i == 1){count = count+1}} 
@@ -59,6 +61,40 @@ dissim_gen = function(dt){
 
     }
     return(matrix(dt))
+}
+
+dissim_low = function(dt){
+    for(i in 1:length(dt)) { 
+        dt[[i]] = tidyr::pivot_wider(dt[[i]], 
+                  names_from = album_id, 
+                  values_from = c(danceability, energy, loudness_overall, speechiness, acousticness, instrumentalness, liveness, valence, tempo_overall, loudness_continuouos, tempo_continuous, tempo_confidence, mode_confidence, time_signature_confidence, loudness, loudness_continuous)) 
+
+        dt[[i]] = dt[[i]][, 2:17] #selecting only columns related to features.
+
+        dt[[i]] <- as.matrix(dt[[i]]) 
+
+        dt[[i]] <- as.matrix(daisy(dt[[i]]))
+
+        dt[[i]][dt[[i]] == 0] <- NA
+
+    }
+    return(matrix(dt))
+}
+
+
+dissim_by_length = function(dt){
+                        for(i in 1:length(dt)){
+                            dt[[i]] %<>% split(dt[[i]]$album_id)
+                            for(k in 1:length(dt[[i]])){
+                                    dt[[i]][[k]]<- as.matrix(
+                                                    daisy(
+                                                        as.matrix(
+                                                            tidyr::pivot_wider(dt[[i]][[k]], names_from = album_id, 
+                                                                                            values_from = c(valence, energy, loudness, tempo))[3:6])))
+                                    dt[[i]][[k]][dt[[i]][[k]] == 0] <- NA
+                            }    
+                        }
+                        return(dt)
 }
 
 album_splitter = function(data){
@@ -121,8 +157,6 @@ cross_val <- function(dataframe, FUN, var_int, var_pred, n_runs){
     final = list(mean_rmse = rmse_error, stde_rmse = rmse_stde, pred_ver = pv)
     return(final)
 }
-
-minmax <- function(x) { return((x- min(x)) /(max(x)-min(x))) }
 
 album_random = function(){
     inicios = seq(1,NROW(teste)-15, 15)
