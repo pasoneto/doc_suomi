@@ -120,12 +120,12 @@ low_minmax = function(){
         }
       
 howto_data = 
-        paste("How to use datasets",
+        paste("How to use datasets (Personal library)",
                 " ",
                 "call    base()             for real values", 
                 "call    z_scored()         for normalized", 
                 "call    min_maxed()        for normalized2", 
                 "call    upsampled_album()  for binded upsamplped albums", 
-                "call    list_upsampled()   for list of upsampled albums",
+                "call    low_minmax()       for min-maxed low level",
                 "call    low_z()            for normalized low level",
                 "call    low_raw()          for raw  low level", sep = "\n")
