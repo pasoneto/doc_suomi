@@ -15,6 +15,18 @@ base = function(){
         return(raw)
 }
 
+greater = function(x){
+    final = c('start')
+    for(i in 1:(length(x)-1)){ 
+        if(x[i+1] > x[i]){
+            final = c(final, 'greater')            
+        } else{
+            final = c(final, 'smaller')
+        }
+    }
+    return(final)
+}
+
 z_scored = function(){
         raw %<>% group_by(album_id) %>%
         dplyr::select(album_id, album_length, track_number, valence, energy, loudness, tempo) %>%

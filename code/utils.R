@@ -138,7 +138,9 @@ model_build <- function(dado, FUN, var_int, var_pred){
     return(model)
 }
 
-#model_build(treino_teste(dt), lm, "valence_next", "valence+energy+loudness+tempo")
+segment3 <- function(x){
+        return(lsr::quantileCut(x, 3, labels = c("1st", "2nd", "3d")))
+        }
 
 cross_val <- function(dataframe, FUN, var_int, var_pred, n_runs){
     p = c(); v = c(); rmserror = c()
