@@ -1,17 +1,14 @@
-library(ggplot2)
-library(dplyr)
-library(randomForest)
-library(foreign)
-library(caret)
-library(keras)
-library(data.table)
-library(cluster)
-library(DescTools)
-library(lattice)
-library(magrittr)
-library(tensorflow)
+library(ggplot2); library(dplyr); library(randomForest); 
+library(foreign); library(caret); library(keras)
+library(data.table); library(cluster); library(DescTools); 
+library(lattice); library(magrittr); library(tensorflow)
+library(markovchain)
 
-set.seed(2020)
+###################################################
+############ DATA PROCESSING UTILS ################
+###################################################
+
+
 #Functions
 z <- function(x){ 
     return((x-mean(x))/sd(x))
@@ -32,6 +29,10 @@ segment2 <- function(x) {
     sections = c(rep("1st",segment), rep("2nd", segment), rep("3d", segment), rep("4th", length(x)-segment*3)) 
     return(sections)
     }
+
+segment3 <- function(x){
+        return(lsr::quantileCut(x, 3, labels = c("1st", "2nd", "3d")))
+        }
 
 minmax <- function(x, min, max) { return(scales::rescale(x, to=c(min,max))) }
 
@@ -63,25 +64,6 @@ dissim_gen = function(dt){
     return(matrix(dt))
 }
 
-dissim_low = function(dt){
-    for(i in 1:length(dt)) { 
-        dt[[i]] = tidyr::pivot_wider(dt[[i]], 
-                  names_from = album_id, 
-                  values_from = c(danceability, energy, loudness_overall, speechiness, acousticness, instrumentalness, liveness, valence, tempo_overall, loudness_continuouos, tempo_continuous, tempo_confidence, mode_confidence, time_signature_confidence, loudness, loudness_continuous)) 
-
-        dt[[i]] = dt[[i]][, 2:17] #selecting only columns related to features.
-
-        dt[[i]] <- as.matrix(dt[[i]]) 
-
-        dt[[i]] <- as.matrix(daisy(dt[[i]]))
-
-        dt[[i]][dt[[i]] == 0] <- NA
-
-    }
-    return(matrix(dt))
-}
-
-
 dissim_by_length = function(dt){
                         for(i in 1:length(dt)){
                             dt[[i]] %<>% split(dt[[i]]$album_id)
@@ -108,28 +90,9 @@ matrix_parser <- function(matrix_list, FUN){
     return(apply(simplify2array(matrix_list), 1:2, function(x){FUN(x)}))
 }
 
-# dt = fread("novo.csv")
-# dt %<>%
-#     group_by(album_id) %>% mutate(album_length = NROW(track_number)) %>%
-#     dplyr::filter(album_length %in% c(6:15)) %>% 
-#     dplyr::select(album_id, track_number, valence, energy, loudness, tempo) %>%
-#     mutate(valence  = z(valence),  energy   = z(energy), loudness = z(loudness), tempo    = z(tempo),
-#         position = segment2(track_number)) %>%
-#     group_by(album_id, position)%>%
-#     summarise(valence = mean(valence), energy = mean(energy),
-#               loudness = mean(loudness), tempo = mean(tempo)) %>% ungroup()
-# dt$position <- relevel(as.factor(dt$position), ref = "1st")
-
-#CROSS VALIDATION MODULES
-treino_teste <- function(dados){
-    dados = split(dados, dados$album_id)
-    size <- floor(0.75 * length(dados))
-    train_ind <- sample(seq_len(length(dados)), size = size, replace = FALSE)
-    dt_train <- dados[train_ind]; dt_train <- bind_rows(dt_train)
-    dt_test <- dados[-train_ind]; dt_test <- bind_rows(dt_test)
-    
-    return(list(train = dt_train, test = dt_test))
-}
+#################################################################################################
+########################################## MODELING UTILS #######################################
+#################################################################################################
 
 #dados = a list of training and test data set; formulinha: string, FUN: model to use
 model_build <- function(dado, FUN, var_int, var_pred){
@@ -137,10 +100,6 @@ model_build <- function(dado, FUN, var_int, var_pred){
     model = FUN(formulinha, data = dado$train) 
     return(model)
 }
-
-segment3 <- function(x){
-        return(lsr::quantileCut(x, 3, labels = c("1st", "2nd", "3d")))
-        }
 
 cross_val <- function(dataframe, FUN, var_int, var_pred, n_runs){
     p = c(); v = c(); rmserror = c()
