@@ -82,7 +82,7 @@ upsampled_album = function(){
         }
 
 list_upsampled = function(){
-        file_list <- list.files(path="/home/pasoneto/Documents/github/doc_suomi/data/dissimilarities/upsampled_bilinear")
+        file_list <- list.files(path="/home/pa/Documents/github/doc_suomi/data/dissimilarities/upsampled_bilinear")
         matrices = c()
 
         for(i in 1:length(file_list)){

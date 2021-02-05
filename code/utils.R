@@ -44,8 +44,8 @@ count <- function(x){
 #################################################
 dissim_gen = function(dt){
     for(i in 1:length(dt)) {
-        dt[[i]] = data.frame(matrix(unlist(dt[[i]]), nrow=16, ncol=6))
-        colnames(dt[[i]]) <- c("track_number", "valence", "energy", "loudness", "tempo", "album_id")
+        # dt[[i]] = data.frame(matrix(unlist(dt[[i]]), nrow=16, ncol=6))
+        # colnames(dt[[i]]) <- c("track_number", "valence", "energy", "loudness", "tempo", "album_id")
         dt[[i]] = tidyr::pivot_wider(dt[[i]], 
                   names_from = c(album_id), 
                   values_from = c(valence, energy, loudness, tempo)) 
