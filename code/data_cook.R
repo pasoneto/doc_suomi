@@ -1,7 +1,7 @@
-setwd("/home/pasoneto/Documents/github/doc_suomi/data/treated_data")
+setwd("/home/pa/Documents/github/doc_suomi/data/treated_data")
 
 raw = fread("data.csv") %>% dplyr::select(!V1)
-raw %<>% group_by(album_id, track_number) %>%
+raw %<>% group_by(album_id, name, track_number) %>%
         summarise(valence = mean(valence), energy = mean(energy), 
                   loudness = mean(loudness), tempo = mean(tempo)) %>%
         mutate(album_length = NROW(track_number)) %>% ungroup() %>%
@@ -11,7 +11,7 @@ raw %<>% group_by(album_id, track_number) %>%
 base = function(){
         raw %<>% group_by(album_id) %>% 
                 mutate(section = segment(track_number)) %>%
-                dplyr::select(album_id, album_length, track_number, valence, energy, loudness, tempo)
+                dplyr::select(album_id, album_length, track_number, valence, energy, loudness, tempo, name)
         return(raw)
 }
 
@@ -25,6 +25,18 @@ greater = function(x){
         }
     }
     return(final)
+}
+
+greater_section = function(x, y){
+        final = c()
+        for(i in 1:length(x)){
+                if(x[i] > y[i]){
+                        final = c(final, "greater")
+                } else{
+                        final = c(final, "smaller")
+                }
+        }
+        return(final)
 }
 
 z_scored = function(){

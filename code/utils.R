@@ -1,9 +1,6 @@
 library(ggplot2); library(dplyr); library(randomForest); 
-library(foreign); library(caret); library(keras)
-library(data.table); library(cluster); library(DescTools); 
-library(lattice); library(magrittr); library(tensorflow)
-library(markovchain)
-
+library(foreign); library(caret); library(data.table); library(cluster); library(DescTools); 
+library(lattice); library(magrittr);library(markovchain)
 ###################################################
 ############ DATA PROCESSING UTILS ################
 ###################################################
@@ -45,16 +42,15 @@ count <- function(x){
 #################################################
 ############ Dissimilarity matrices #############
 #################################################
-
 dissim_gen = function(dt){
-    for(i in 1:length(dt)) { 
+    for(i in 1:length(dt)) {
+        dt[[i]] = data.frame(matrix(unlist(dt[[i]]), nrow=16, ncol=6))
+        colnames(dt[[i]]) <- c("track_number", "valence", "energy", "loudness", "tempo", "album_id")
         dt[[i]] = tidyr::pivot_wider(dt[[i]], 
-                  names_from = album_id, 
+                  names_from = c(album_id), 
                   values_from = c(valence, energy, loudness, tempo)) 
-
-        dt[[i]] = dt[[i]][, 2:5] #selecting only columns related to features.
-
-        dt[[i]] <- as.matrix(dt[[i]]) 
+        
+        dt[[i]] = dt[[i]][, 2:5]
 
         dt[[i]] <- as.matrix(daisy(dt[[i]]))
 
@@ -80,9 +76,8 @@ dissim_by_length = function(dt){
 }
 
 album_splitter = function(data){
-    dt %<>% dplyr::select(track_number, valence, energy, loudness, tempo) %>%
-        split(data$album_id) 
-    return(dt)
+    data %<>% split(data$album_id) 
+    return(data)
 }
 
 #element-wise matrix calculator
@@ -211,4 +206,4 @@ r2 = function(var_interest, pred_vars, model, data){
     
     return(r2)
 }
-setwd("/home/pasoneto/Documents/github/doc_suomi/code")
+setwd("/home/pa/Documents/github/doc_suomi/code")
