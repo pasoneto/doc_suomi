@@ -118,13 +118,13 @@ low_z = function(){
 
 
 low_raw = function(){
-        low = fread("/home/pasoneto/Documents/github/doc_suomi/data/treated_data/data_low.csv")
+        low = fread("/home/pa/Documents/github/doc_suomi/data/treated_data/data_low.csv")
         low %<>% select(!V1)
         return(low)
         }
 
 low_minmax = function(){
-        low = fread("/home/pasoneto/Documents/github/doc_suomi/data/treated_data/data_low.csv")
+        low = fread("/home/pa/Documents/github/doc_suomi/data/treated_data/data_low.csv")
         low %<>% select(!V1) %>%
                  #group_by(album_id) %>%
                  mutate_if(is.numeric, function(x){return(minmax(x, 1, 2))})

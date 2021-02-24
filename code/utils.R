@@ -1,6 +1,6 @@
 library(ggplot2); library(dplyr); library(randomForest); 
 library(foreign); library(caret); library(data.table); library(cluster); library(DescTools); 
-library(lattice); library(magrittr);library(markovchain)
+library(lattice); library(magrittr);library(markovchain); library(tidyr)
 ###################################################
 ############ DATA PROCESSING UTILS ################
 ###################################################
@@ -59,6 +59,27 @@ dissim_gen = function(dt){
     }
     return(matrix(dt))
 }
+# Optimization eval
+special_shuffler = function(x){
+    bottom = x[sample(2:nrow(x)), ]
+    up = x[1, ]
+    return( dplyr::bind_rows(up, bottom) )
+}
+
+match = function(x, y){
+    count = 0
+    for(i in 1:(length(x)-1)){
+        if(  (x[i] == x[i+1]) && (y[i] == y[i+1]) ){
+            count = count+1
+        }
+        if(  (x[i] != x[i+1]) && (y[i] != y[i+1]) ){
+            count = count+1
+        }
+    }
+    return (count/(length(x)-1))
+}
+
+
 
 dissim_by_length = function(dt){
                         for(i in 1:length(dt)){
