@@ -27,18 +27,27 @@ resultados = []
 historicos = []
 count = 0
 for k in data:
-    r, h, _ = opt(k, T = 1, likelyhood = likelyhood, tm = tm, swap = swap, 
-                  Temperature= 1, outer = 250, cooling = 0.8, n = 10)
+    r, h, _, = opt(k,
+                   likelyhood = likelyhood,
+                   tm = tm,
+                   swap = swap,
+                   Temperature= 5,
+                   outer = 500,
+                   cooling = 0.2,
+                   n = 10) 
     resultados.append(r)
-    historicos.append([h[0], h[-1]])
+    # historicos.append([h[0], maior])
     count = count+1
-    print("estamos no album ", count, "de ", len(data))
-
-
+    print("----------------------------------------------------------")
+    print("----------------------------------------------------------")
+    print("Album ", count, "/", len(data), "| fomos de ", h[0], "para ", likelyhood(r, tm))
+    print("----------------------------------------------------------")
+    print("----------------------------------------------------------")
 # %%
 final = pd.concat(resultados)
 
-
+#%%
+final.to_csv("reordered.csv")
 
 
 

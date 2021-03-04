@@ -28,8 +28,14 @@ segment2 <- function(x) {
     }
 
 segment3 <- function(x){
-        return(lsr::quantileCut(x, 3, labels = c("1st", "2nd", "3d")))
+        return(lsr::quantileCut(x, 4, labels = c("1st", "2nd", "3d", "4th")))
         }
+
+segment4 <- function(x){
+        return(lsr::quantileCut(x, 6, labels = c("1st", "2nd", "3d", "4th", "5th", "6th")))
+        }
+
+
 
 minmax <- function(x, min, max) { return(scales::rescale(x, to=c(min,max))) }
 
@@ -38,6 +44,14 @@ count <- function(x){
     for(i in x){ if(i == 1){count = count+1}} 
     return(count/length(x)) 
     }
+
+entropy = function(probs){
+    v = c()
+    for(i in 1:length(probs)){
+        v = c(v, -(probs[i]*log2(probs[i])) )
+    }
+    return(sum(v))
+}
 
 #################################################
 ############ Dissimilarity matrices #############

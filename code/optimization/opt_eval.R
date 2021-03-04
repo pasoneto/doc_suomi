@@ -9,7 +9,6 @@ control = album_splitter(original)
 for(i in 1:length(control)){ control[[i]] = special_shuffler(control[[i]]) }
 control = bind_rows(control)
 
-
 junto = dplyr::bind_cols(original, reordered, control)
 colnames(junto) = c("V1", "album_id1", "track_number_original", "valence_original", "energy_original", "loudness_original", "tempo_original",
                     "V2", "album_id2", "track_number_reor",     "valence_reor",     "energy_reor",     "loudness_reor", "tempo_reor",
@@ -33,22 +32,21 @@ junto %<>% melt(id.vars = c("album_id1"),
                                  "control_loudness", "control_tempo")) %>%
             separate(variable, c("condition", "feature"), "_")
 
-junto %>% 
-    ggplot(aes(x = value, fill = condition)) +
-           facet_wrap(~feature)+
-           geom_density(alpha = 0.8)
+junto = ggplot(junto, aes(x = value, fill = condition)) +
+               facet_wrap(~feature)+
+               geom_density(alpha = 0.8)
 
 ########################################
 dd = album_splitter(z_scored())
 dd = dd[round(length(dd)*0.8):length(dd)]
 dd = dplyr::bind_rows(dd)
 dd %<>% filter(album_id %in% unique(reordered$album_id)) %>% arrange(album_id)
-
-
+# dd %>% View()
+# reordered %>% View()
 reordered %<>% filter(album_id %in% unique(dd$album_id)) %>% arrange(album_id)
 
-
 control = album_splitter(dd)
+
 for(i in 1:length(control)){ control[[i]] = special_shuffler(control[[i]]) }
 control = bind_rows(control)
 
@@ -56,28 +54,96 @@ model = left_join(reordered, dd, by=c("album_id", "track_number"))
 control = left_join(control, dd, by=c("album_id", "track_number"))
 comp = data.frame(valence_model = model$valence.y, 
                   valence_original = dd$valence,
-                  valence_control = control$valence.x, 
+                  valence_control = control$valence.x,
+                  energy_model = model$energy.y,
+                  energy_original = dd$energy,
+                  energy_control = control$energy.x,
+                  loudness_model = model$loudness.y,
+                  loudness_original = dd$loudness,
+                  loudness_control = control$loudness.x,
+                  tempo_model = model$tempo.y,
+                  tempo_original = dd$tempo,
+                  tempo_control = control$tempo.x,
                   album_id = dd$album_id)
 
+v = c("valence_model", "valence_original", "valence_control")
+e = c("energy_model", "energy_original", "energy_control")
+l = c("loudness_model", "loudness_original", "loudness_control")
+t =  c("tempo_model", "tempo_original", "tempo_control")
+
+features = list(v,e,l,t)
 comp = album_splitter(comp)
 
-final = c()
-for(i in 1:length(comp)){
-    comp[[i]] %>% select(-album_id) %>% t() %>% data.frame() %>% daisy() -> oi
-    final[[i]] = data.frame(as.matrix(oi))
+ha = c()
+for(j in 1:length(features)){
+    final = c()
+    for(i in 1:length(comp)){
+        comp[[i]] %>% select(features[[j]]) %>% t() %>% data.frame() %>% daisy() -> oi
+        final[[i]] = data.frame(as.matrix(oi))
+    }
+    final = bind_rows(final)
+    ha[[j]] = final
 }
 
-model_eval = c()
-control_eval = c()
-for(i in 1:length(final)){
-    model_eval[[i]] = final[[i]]$valence_model[2]
-    control_eval[[i]] = final[[i]]$valence_model[3]
+for(i in 1:length(ha)){
+    colnames(ha[[i]]) <- c("model", "original", "control") 
 }
 
-f = data.frame(model = unlist(model_eval), control = unlist(control_eval))
-f %>% melt() %>% group_by(variable) %>%
+ha[[1]]$feature = "valence"
+ha[[2]]$feature = "energy"
+ha[[3]]$feature = "loudness"
+ha[[4]]$feature = "tempo"
+
+cabo = bind_rows(ha)
+cabo %>% select(!model) %>% filter(original != 0) %>% filter(control != 0) %>% melt(id.vars = "feature") %>% 
+    group_by(feature, variable) %>%
     summarise(m_v = mean(value),
               stder = sd(value)/sqrt(length(value))) %>%
-              ggplot(aes(x = m_v, y = m_v, fill = variable, color = variable))+
-                geom_point()+
-                geom_errorbar(aes(ymin = m_v-stder, ymax = m_v+stder)) 
+              ggplot(aes(x = feature, y = m_v, fill = variable, color = variable, group = variable))+
+                    #  facet_wrap(~feature)+
+                     geom_point(position = position_dodge(width = 0.9))+
+                     geom_errorbar(position = position_dodge(width = 0.9), aes(ymin = m_v-stder, ymax = m_v+stder))+
+                     ylab("Dissimilarity with model")
+
+
+
+cabo %>% melt(id.vars = "feature") %>% View()
+colnames(cabo)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+f %>% melt() %>% 
+      group_by(variable) %>%
+      ggplot(aes(x = variable, y = value, fill = variable)) +
+             geom_boxplot() %>%
+             ggsave(path = "/home/pa/Documents/github/doc_suomi/code/optimization/", device='tiff', dpi=700)
+
+    
+
+dd %>% View()
