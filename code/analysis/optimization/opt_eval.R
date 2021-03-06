@@ -13,7 +13,9 @@ junto = dplyr::bind_cols(original, reordered, control)
 colnames(junto) = c("V1", "album_id1", "track_number_original", "valence_original", "energy_original", "loudness_original", "tempo_original",
                     "V2", "album_id2", "track_number_reor",     "valence_reor",     "energy_reor",     "loudness_reor", "tempo_reor",
                     "V3", "album_id3", "track_number_control", "valence_control", "energy_control", "loudness_control", "tempo_control")
-junto %<>% 
+
+########################### DENSITY PLOT OF ACCURACY - DIERCTION ############################
+junto %>% 
     group_by(album_id1) %>%
     summarise(model_valence = match(valence_original, valence_reor), 
               model_energy = match(energy_original, energy_reor),
@@ -22,21 +24,57 @@ junto %<>%
               control_valence = match(valence_original, valence_control),
               control_energy = match(energy_original, energy_control),
               control_loudness = match(loudness_original, loudness_control),
-              control_tempo = match(tempo_original, tempo_control))
-              
-              
-junto %<>% melt(id.vars = c("album_id1"), 
-                measure.vars = c("model_valence", 'model_energy', 
-                                 "model_loudness", "model_tempo", 
-                                 "control_valence", "control_energy", 
-                                 "control_loudness", "control_tempo")) %>%
-            separate(variable, c("condition", "feature"), "_")
+              control_tempo = match(tempo_original, tempo_control)) %>%
 
-junto = ggplot(junto, aes(x = value, fill = condition)) +
-               facet_wrap(~feature)+
-               geom_density(alpha = 0.8)
+              melt(id.vars = c("album_id1"), 
+                   measure.vars = c("model_valence", 'model_energy', 
+                                    "model_loudness", "model_tempo", 
+                                    "control_valence", "control_energy", 
+                                    "control_loudness", "control_tempo")) %>%
+              
+              separate(variable, c("condition", "feature"), "_") %>%
 
-########################################
+              ggplot(aes(x = value, fill = condition)) +
+                         facet_wrap(~feature)+
+                         geom_density(alpha = 0.8)
+
+direction_counter = function(x){
+    count = 0
+    for(i in 1:(length(x)-1)){
+        if(x[[i]] == x[[i+1]]-1){
+            count = count+1
+        } 
+    }
+    return(count/(length(x)-1))
+}
+colnames(junto)
+########################### ACCURACY - INCREASING SEQUENCE ############################
+junto %>% 
+    group_by(album_id1) %>%
+    summarise(model = direction_counter(track_number_reor), 
+              control = direction_counter(track_number_control)) %>%
+
+              melt() -> boxplot
+
+boxplot %>%
+    ggplot(aes(x = variable, y = value, color = variable)) +
+        geom_boxplot()
+
+junto %>% 
+    group_by(album_id1) %>%
+    summarise(model = direction_counter(track_number_reor), 
+              control = direction_counter(track_number_control)) %>%
+    ungroup() %>%
+    melt() %>% group_by(variable) %>%
+    summarise(val = mean(value),
+              stder = sd(value)/sqrt(length(value))) %>%
+    ggplot(aes(x = variable, y = val))+
+        geom_point()+
+        geom_errorbar(aes(ymin = val-stder, ymax = val+stder))
+
+
+
+########################### DISSIMILARITY - INCREASING SEQUENCE ############################
 dd = album_splitter(z_scored())
 dd = dd[round(length(dd)*0.8):length(dd)]
 dd = dplyr::bind_rows(dd)
